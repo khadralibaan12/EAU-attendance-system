@@ -1,0 +1,1279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>EAU Qardho – Attendance System</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+:root{
+  --bg:#080e1a;--bg2:#0d1526;--bg3:#111e35;--bg4:#162040;
+  --cyan:#00d4ff;--cyan2:#00ffcc;--green:#00e676;--red:#ff4757;
+  --purple:#7c4dff;--gold:#ffd700;
+  --text:#e8f0fe;--muted:#6b82a8;--border:rgba(0,212,255,.15);
+  --card:rgba(13,21,38,.85);--radius:16px;
+  --glow:0 0 20px rgba(0,212,255,.2);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+
+/* BG animated */
+body::before{
+  content:'';position:fixed;inset:0;
+  background:radial-gradient(ellipse at 20% 20%,rgba(0,212,255,.06) 0%,transparent 60%),
+              radial-gradient(ellipse at 80% 80%,rgba(124,77,255,.06) 0%,transparent 60%);
+  pointer-events:none;z-index:0;
+}
+.particles{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:0;}
+.particle{position:absolute;border-radius:50%;background:rgba(0,212,255,.4);animation:float linear infinite;}
+@keyframes float{0%{transform:translateY(100vh) scale(0);opacity:0;}10%{opacity:1;}90%{opacity:.3;}100%{transform:translateY(-10vh) scale(1.5);opacity:0;}}
+
+/* ── LAYOUT ── */
+.app{display:flex;min-height:100vh;position:relative;z-index:1;}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  width:220px;min-height:100vh;background:rgba(8,14,26,.95);
+  border-right:1px solid var(--border);padding:24px 0;
+  display:flex;flex-direction:column;gap:4px;flex-shrink:0;
+  backdrop-filter:blur(20px);position:fixed;top:0;left:0;bottom:0;z-index:50;
+}
+.sidebar-logo{padding:0 20px 24px;border-bottom:1px solid var(--border);margin-bottom:8px;}
+.sidebar-logo .eau-badge{
+  width:52px;height:52px;border-radius:50%;
+  background:linear-gradient(135deg,var(--cyan),var(--purple));
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Orbitron',sans-serif;font-size:.9rem;color:#fff;
+  font-weight:700;margin-bottom:10px;
+  box-shadow:0 0 20px rgba(0,212,255,.4);
+}
+.sidebar-logo h3{font-size:.82rem;color:var(--cyan);font-weight:600;letter-spacing:.5px;}
+.sidebar-logo p{font-size:.7rem;color:var(--muted);margin-top:2px;}
+
+.nav-item{
+  display:flex;align-items:center;gap:12px;padding:11px 20px;
+  cursor:pointer;transition:.2s;border-left:3px solid transparent;
+  font-size:.88rem;color:var(--muted);font-weight:500;
+}
+.nav-item:hover{background:rgba(0,212,255,.06);color:var(--text);}
+.nav-item.active{background:rgba(0,212,255,.1);color:var(--cyan);border-left-color:var(--cyan);}
+.nav-item .icon{font-size:1.1rem;width:22px;text-align:center;}
+
+.sidebar-quote{
+  margin-top:auto;padding:16px 20px;
+  border-top:1px solid var(--border);
+  font-size:.72rem;color:var(--muted);line-height:1.6;font-style:italic;
+}
+.sidebar-quote::before{content:'"';font-size:1.5rem;color:var(--cyan);opacity:.5;display:block;margin-bottom:4px;}
+
+/* ── CONTENT ── */
+.content{margin-left:220px;flex:1;display:flex;flex-direction:column;min-height:100vh;}
+
+/* ── HEADER ── */
+.topbar{
+  background:rgba(8,14,26,.9);border-bottom:1px solid var(--border);
+  backdrop-filter:blur(20px);padding:0 32px;height:80px;
+  display:flex;align-items:center;gap:20px;position:sticky;top:0;z-index:40;
+}
+.univ-logo-area{display:flex;align-items:center;gap:14px;}
+.univ-badge{
+  width:60px;height:60px;border-radius:50%;
+  background:linear-gradient(135deg,#0d2a4a,#1a4a6a);
+  border:2px solid var(--cyan);display:flex;align-items:center;justify-content:center;
+  font-family:'Orbitron',sans-serif;font-size:.8rem;color:var(--cyan);font-weight:700;
+  box-shadow:0 0 16px rgba(0,212,255,.3);flex-shrink:0;
+}
+.univ-text h1{
+  font-family:'Orbitron',sans-serif;font-size:1.2rem;
+  background:linear-gradient(90deg,#fff,var(--cyan));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  letter-spacing:.5px;
+}
+.univ-text p{color:var(--cyan);font-size:.75rem;font-weight:600;letter-spacing:1px;margin-top:2px;}
+.univ-text span{color:var(--muted);font-size:.7rem;display:block;margin-top:1px;}
+
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:12px;}
+.clock-box{
+  background:rgba(0,212,255,.08);border:1px solid var(--border);
+  border-radius:12px;padding:8px 16px;text-align:right;
+  box-shadow:var(--glow);
+}
+.clock-date{font-size:.72rem;color:var(--muted);}
+.clock-time{font-family:'Orbitron',sans-serif;font-size:1rem;color:var(--cyan);margin-top:2px;}
+
+/* ── LOGIN TOGGLE ── */
+.login-toggle{
+  display:flex;background:rgba(255,255,255,.05);border:1px solid var(--border);
+  border-radius:10px;overflow:hidden;
+}
+.login-toggle button{
+  padding:8px 20px;font-size:.83rem;font-weight:600;border:none;cursor:pointer;transition:.2s;
+  background:transparent;color:var(--muted);
+}
+.login-toggle button.active{background:linear-gradient(135deg,var(--cyan),var(--purple));color:#fff;}
+
+/* ── MAIN AREA ── */
+.main{padding:28px 32px;flex:1;}
+
+/* ── SECTION ── */
+.section{display:none;}
+.section.active{display:block;animation:fadeIn .3s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+
+/* ── TWO-COL ── */
+.two-col{display:grid;grid-template-columns:1fr 1.4fr;gap:24px;margin-top:24px;}
+
+/* ── CARD ── */
+.card{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:24px;backdrop-filter:blur(12px);
+  box-shadow:0 4px 24px rgba(0,0,0,.3),var(--glow);
+}
+.card-head{display:flex;align-items:center;gap:10px;margin-bottom:20px;}
+.card-head .ch-icon{
+  width:40px;height:40px;border-radius:10px;
+  background:linear-gradient(135deg,rgba(0,212,255,.2),rgba(124,77,255,.2));
+  display:flex;align-items:center;justify-content:center;font-size:1.2rem;
+}
+.card-head h3{font-size:1.1rem;color:var(--cyan);font-weight:600;}
+.card-head p{font-size:.76rem;color:var(--muted);margin-top:2px;}
+
+/* ── FORM ── */
+.field{margin-bottom:16px;}
+.field label{display:block;font-size:.78rem;color:var(--muted);font-weight:500;margin-bottom:6px;letter-spacing:.3px;}
+.field-wrap{
+  display:flex;align-items:center;gap:10px;
+  background:rgba(255,255,255,.04);border:1px solid var(--border);
+  border-radius:10px;padding:11px 14px;transition:.2s;
+}
+.field-wrap:focus-within{border-color:var(--cyan);box-shadow:0 0 12px rgba(0,212,255,.15);}
+.field-wrap .fi{color:var(--muted);font-size:1rem;}
+.field-wrap input,.field-wrap select{
+  flex:1;background:transparent;border:none;outline:none;
+  color:var(--text);font-size:.92rem;font-family:'Outfit',sans-serif;
+}
+.field-wrap select option{background:#0d1526;}
+
+/* ── BTN ── */
+.btn-mark{
+  width:100%;padding:14px;border-radius:12px;font-size:1rem;font-weight:700;
+  border:none;cursor:pointer;transition:.3s;letter-spacing:.3px;
+  background:linear-gradient(135deg,var(--cyan),var(--green));
+  color:#080e1a;display:flex;align-items:center;justify-content:center;gap:8px;
+  box-shadow:0 4px 20px rgba(0,212,255,.3);
+}
+.btn-mark:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,212,255,.4);}
+.btn-mark:active{transform:translateY(0);}
+
+.btn{padding:10px 20px;border-radius:10px;font-size:.85rem;font-weight:600;border:none;cursor:pointer;transition:.2s;}
+.btn-cyan{background:linear-gradient(135deg,var(--cyan),#0099bb);color:#080e1a;}
+.btn-green{background:linear-gradient(135deg,var(--green),#00aa55);color:#080e1a;}
+.btn-red{background:rgba(255,71,87,.15);color:var(--red);border:1px solid rgba(255,71,87,.3);}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text);}
+.btn:hover{transform:translateY(-1px);opacity:.9;}
+.btn-sm{padding:6px 14px;font-size:.78rem;}
+
+/* ── SUCCESS MSG ── */
+.success-msg{
+  background:rgba(0,230,118,.1);border:1px solid rgba(0,230,118,.3);
+  border-radius:10px;padding:12px 16px;display:none;
+  align-items:center;gap:10px;margin-top:14px;
+}
+.success-msg.show{display:flex;animation:fadeIn .3s ease;}
+.success-msg .sm-icon{color:var(--green);font-size:1.3rem;}
+.success-msg .sm-text{font-size:.85rem;color:var(--green);font-weight:500;}
+
+/* ── QR ── */
+.qr-section{margin-top:20px;padding-top:20px;border-top:1px solid var(--border);}
+.qr-section h4{font-size:.9rem;color:var(--text);font-weight:600;margin-bottom:4px;}
+.qr-section p{font-size:.76rem;color:var(--muted);margin-bottom:14px;}
+.qr-box{
+  background:rgba(255,255,255,.95);border-radius:12px;
+  padding:16px;display:inline-block;
+  border:2px solid rgba(0,212,255,.3);
+  box-shadow:0 0 20px rgba(0,212,255,.2);
+}
+#qrcode canvas,#qrcode img{display:block;}
+.btn-qr{
+  margin-top:10px;background:transparent;border:1px solid var(--border);
+  color:var(--muted);padding:7px 16px;border-radius:8px;font-size:.78rem;
+  cursor:pointer;transition:.2s;display:flex;align-items:center;gap:6px;
+}
+.btn-qr:hover{border-color:var(--cyan);color:var(--cyan);}
+
+/* ── STATS ROW ── */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+.stat-box{
+  background:rgba(255,255,255,.04);border:1px solid var(--border);
+  border-radius:12px;padding:16px;text-align:center;
+}
+.stat-box .sb-icon{font-size:1.6rem;margin-bottom:6px;}
+.stat-box .sb-val{font-size:1.6rem;font-weight:700;font-family:'Orbitron',sans-serif;}
+.stat-box .sb-val.cyan{color:var(--cyan);}
+.stat-box .sb-val.green{color:var(--green);}
+.stat-box .sb-val.red{color:var(--red);}
+.stat-box .sb-val.gold{color:var(--gold);}
+.stat-box .sb-lbl{font-size:.72rem;color:var(--muted);margin-top:4px;}
+
+/* ── SEARCH ── */
+.search-wrap{
+  display:flex;align-items:center;gap:10px;
+  background:rgba(255,255,255,.04);border:1px solid var(--border);
+  border-radius:10px;padding:9px 14px;margin-bottom:16px;
+}
+.search-wrap input{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-size:.88rem;font-family:'Outfit',sans-serif;}
+.search-wrap .si{color:var(--muted);}
+
+/* ── TABLE ── */
+.table-wrap{overflow-x:auto;max-height:340px;overflow-y:auto;}
+.table-wrap::-webkit-scrollbar{width:4px;height:4px;}
+.table-wrap::-webkit-scrollbar-track{background:transparent;}
+.table-wrap::-webkit-scrollbar-thumb{background:rgba(0,212,255,.3);border-radius:2px;}
+table{width:100%;border-collapse:collapse;font-size:.83rem;}
+thead th{
+  position:sticky;top:0;background:#0d1526;
+  padding:10px 12px;text-align:left;color:var(--muted);
+  font-weight:600;font-size:.75rem;letter-spacing:.5px;text-transform:uppercase;
+  border-bottom:1px solid var(--border);
+}
+tbody td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.04);color:var(--text);}
+tbody tr:hover td{background:rgba(0,212,255,.04);}
+.badge-present{background:rgba(0,230,118,.15);color:var(--green);padding:3px 10px;border-radius:20px;font-size:.75rem;font-weight:600;border:1px solid rgba(0,230,118,.3);}
+.badge-absent{background:rgba(255,71,87,.15);color:var(--red);padding:3px 10px;border-radius:20px;font-size:.75rem;font-weight:600;border:1px solid rgba(255,71,87,.3);}
+.badge-late{background:rgba(255,215,0,.15);color:var(--gold);padding:3px 10px;border-radius:20px;font-size:.75rem;font-weight:600;border:1px solid rgba(255,215,0,.3);}
+
+/* ── DOWNLOAD BTNS ── */
+.dl-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:16px;}
+.dl-btn{
+  padding:11px;border-radius:10px;font-size:.82rem;font-weight:600;
+  border:none;cursor:pointer;transition:.2s;display:flex;align-items:center;justify-content:center;gap:7px;
+}
+.dl-btn.pdf{background:rgba(0,212,255,.15);color:var(--cyan);border:1px solid rgba(0,212,255,.3);}
+.dl-btn.excel{background:rgba(0,230,118,.15);color:var(--green);border:1px solid rgba(0,230,118,.3);}
+.dl-btn.clear{background:rgba(255,71,87,.1);color:var(--red);border:1px solid rgba(255,71,87,.2);}
+.dl-btn:hover{transform:translateY(-2px);filter:brightness(1.2);}
+
+/* ── TEACHER PANEL ── */
+.att-controls{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+.att-controls select{
+  padding:8px 14px;background:rgba(255,255,255,.05);border:1px solid var(--border);
+  border-radius:8px;color:var(--text);font-size:.83rem;outline:none;cursor:pointer;
+}
+.att-controls input[type=date]{
+  padding:8px 14px;background:rgba(255,255,255,.05);border:1px solid var(--border);
+  border-radius:8px;color:var(--text);font-size:.83rem;outline:none;
+  color-scheme:dark;
+}
+.att-mark-row{display:flex;gap:6px;}
+.att-btn{
+  padding:5px 12px;border-radius:6px;font-size:.76rem;font-weight:600;
+  border:1px solid;cursor:pointer;transition:.15s;
+}
+.att-btn.P{background:rgba(0,230,118,.1);color:var(--green);border-color:rgba(0,230,118,.3);}
+.att-btn.A{background:rgba(255,71,87,.1);color:var(--red);border-color:rgba(255,71,87,.3);}
+.att-btn.L{background:rgba(255,215,0,.1);color:var(--gold);border-color:rgba(255,215,0,.3);}
+.att-btn.sel-P{background:var(--green);color:#080e1a;border-color:var(--green);}
+.att-btn.sel-A{background:var(--red);color:#fff;border-color:var(--red);}
+.att-btn.sel-L{background:var(--gold);color:#080e1a;border-color:var(--gold);}
+
+/* ── REPORTS SECTION ── */
+.rep-tabs{display:flex;gap:6px;margin-bottom:20px;}
+.rep-tab{padding:8px 18px;border-radius:8px;font-size:.83rem;font-weight:600;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted);transition:.2s;}
+.rep-tab.active{background:linear-gradient(135deg,rgba(0,212,255,.2),rgba(124,77,255,.2));color:var(--cyan);border-color:var(--cyan);}
+
+/* ── ABOUT ── */
+.about-hero{
+  background:linear-gradient(135deg,rgba(0,212,255,.1),rgba(124,77,255,.1));
+  border:1px solid var(--border);border-radius:20px;padding:40px;text-align:center;margin-bottom:24px;
+}
+.about-hero h2{font-family:'Orbitron',sans-serif;font-size:1.5rem;color:var(--cyan);margin-bottom:8px;}
+.about-hero p{color:var(--muted);line-height:1.8;}
+
+/* ── LOGIN PAGE ── */
+.login-overlay{
+  position:fixed;inset:0;background:rgba(8,14,26,.97);z-index:200;
+  display:flex;align-items:center;justify-content:center;
+  backdrop-filter:blur(10px);
+}
+.login-card{
+  background:rgba(13,21,38,.9);border:1px solid var(--border);
+  border-radius:24px;padding:44px;width:100%;max-width:420px;text-align:center;
+  box-shadow:0 24px 60px rgba(0,0,0,.5),var(--glow);
+  animation:fadeIn .4s ease;
+}
+.login-card .eau-logo{
+  width:80px;height:80px;border-radius:50%;margin:0 auto 16px;
+  background:linear-gradient(135deg,#0d2a4a,#1a4a6a);
+  border:2px solid var(--cyan);display:flex;align-items:center;justify-content:center;
+  font-family:'Orbitron',sans-serif;color:var(--cyan);font-size:.9rem;font-weight:700;
+  box-shadow:0 0 24px rgba(0,212,255,.3);
+}
+.login-card h2{font-family:'Orbitron',sans-serif;font-size:1.1rem;color:var(--text);margin-bottom:4px;}
+.login-card p{color:var(--muted);font-size:.8rem;margin-bottom:28px;}
+.login-role-toggle{display:flex;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:20px;}
+.login-role-toggle button{flex:1;padding:10px;font-size:.85rem;font-weight:600;border:none;cursor:pointer;transition:.2s;background:transparent;color:var(--muted);}
+.login-role-toggle button.active{background:linear-gradient(135deg,var(--cyan),var(--purple));color:#fff;}
+.login-field{margin-bottom:14px;text-align:left;}
+.login-field label{display:block;font-size:.76rem;color:var(--muted);margin-bottom:5px;}
+.login-field input{
+  width:100%;padding:11px 14px;background:rgba(255,255,255,.05);
+  border:1px solid var(--border);border-radius:8px;color:var(--text);
+  font-size:.9rem;outline:none;transition:.2s;font-family:'Outfit',sans-serif;
+}
+.login-field input:focus{border-color:var(--cyan);box-shadow:0 0 12px rgba(0,212,255,.15);}
+.btn-login{
+  width:100%;padding:13px;border-radius:10px;font-size:.95rem;font-weight:700;
+  border:none;cursor:pointer;background:linear-gradient(135deg,var(--cyan),var(--purple));
+  color:#fff;margin-top:4px;transition:.3s;letter-spacing:.3px;
+}
+.btn-login:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,212,255,.3);}
+.login-hint{color:var(--muted);font-size:.74rem;margin-top:14px;}
+.login-hint a{color:var(--cyan);cursor:pointer;text-decoration:none;}
+
+/* ── FOOTER ── */
+footer{
+  text-align:center;padding:16px;font-size:.74rem;color:var(--muted);
+  border-top:1px solid var(--border);
+}
+footer span{color:var(--cyan);}
+
+/* ── DEPT GRID ── */
+.dept-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;}
+.dept-card{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:20px;cursor:pointer;transition:.25s;text-align:center;
+}
+.dept-card:hover{border-color:var(--cyan);transform:translateY(-3px);box-shadow:var(--glow);}
+.dept-card .dc-icon{font-size:2.2rem;margin-bottom:10px;}
+.dept-card .dc-name{font-weight:600;font-size:.9rem;color:var(--text);}
+.dept-card .dc-count{font-size:.75rem;color:var(--cyan);margin-top:6px;}
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px){
+  .sidebar{width:60px;}
+  .sidebar .nav-item span,.sidebar-logo h3,.sidebar-logo p,.sidebar-quote,.nav-item .nav-label{display:none;}
+  .content{margin-left:60px;}
+  .two-col{grid-template-columns:1fr;}
+  .stats-row{grid-template-columns:repeat(2,1fr);}
+}
+@media(max-width:600px){
+  .sidebar{display:none;}
+  .content{margin-left:0;}
+  .main{padding:16px;}
+  .topbar{padding:0 16px;}
+  .dl-row{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- Particles -->
+<div class="particles" id="particles"></div>
+
+<!-- ══ LOGIN OVERLAY ══ -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-card">
+    <div class="eau-logo">EAU</div>
+    <h2>EAST AFRICAN UNIVERSITY</h2>
+    <p>Qardho Campus – Attendance System</p>
+    <div class="login-role-toggle">
+      <button class="active" id="roleStudent" onclick="setRole('student')">🎓 Student</button>
+      <button id="roleTeacher" onclick="setRole('teacher')">👨‍🏫 Teacher</button>
+      <button id="roleAdmin" onclick="setRole('admin')">🔑 Admin</button>
+    </div>
+    <div class="login-field"><label>USERNAME</label><input type="text" id="loginUser" placeholder="Enter username" value="admin"/></div>
+    <div class="login-field"><label>PASSWORD</label><input type="password" id="loginPass" placeholder="••••••••" value="admin123" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+    <div id="loginErr" style="color:var(--red);font-size:.8rem;margin-bottom:8px;display:none;">❌ Invalid credentials</div>
+    <button class="btn-login" onclick="doLogin()">Sign In →</button>
+    <div class="login-hint">
+      Demo: admin/admin123 &nbsp;|&nbsp; teacher1/teach123 &nbsp;|&nbsp; student/stud123<br/>
+      New student? <a onclick="showRegister()">Register here</a>
+    </div>
+  </div>
+</div>
+
+<!-- ══ REGISTER OVERLAY ══ -->
+<div class="login-overlay" id="regOverlay" style="display:none;">
+  <div class="login-card" style="max-width:480px;">
+    <div class="eau-logo" style="font-size:.7rem;">EAU</div>
+    <h2>STUDENT REGISTRATION</h2>
+    <p style="margin-bottom:20px;">East Africa University – Qardho</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;text-align:left;">
+      <div class="login-field"><label>FIRST NAME</label><input id="r_fn" placeholder="Ahmed"/></div>
+      <div class="login-field"><label>LAST NAME</label><input id="r_ln" placeholder="Mohamed"/></div>
+      <div class="login-field"><label>STUDENT ID</label><input id="r_id" placeholder="EAU-CS-045"/></div>
+      <div class="login-field"><label>GENDER</label>
+        <input id="r_gen" placeholder="Male / Female"/>
+      </div>
+      <div class="login-field"><label>DEPARTMENT</label>
+        <input id="r_dept" placeholder="Computer Science" list="deptList"/>
+        <datalist id="deptList">
+          <option>Computer Science</option><option>Accounting & Finance</option>
+          <option>Sharia Islamic</option><option>Social Work</option>
+          <option>Public Administration</option><option>Veterinary Science</option>
+          <option>Nursing</option><option>Clinical</option>
+        </datalist>
+      </div>
+      <div class="login-field"><label>SEMESTER</label><input id="r_sem" placeholder="8" type="number" min="1" max="8"/></div>
+      <div class="login-field"><label>PASSWORD</label><input type="password" id="r_pass" placeholder="Create password"/></div>
+      <div class="login-field"><label>CONFIRM</label><input type="password" id="r_pass2" placeholder="Repeat"/></div>
+    </div>
+    <div id="regMsg" style="font-size:.8rem;margin:8px 0;display:none;"></div>
+    <button class="btn-login" onclick="doRegister()">Register →</button>
+    <div class="login-hint"><a onclick="showLogin()">← Back to Login</a></div>
+  </div>
+</div>
+
+<!-- ══ APP ══ -->
+<div class="app" id="appWrap" style="display:none;">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <div class="eau-badge">EAU</div>
+      <h3>EAU QARDHO</h3>
+      <p>Attendance System</p>
+    </div>
+    <div class="nav-item active" onclick="navTo('home',this)"><span class="icon">🏠</span><span class="nav-label">Home</span></div>
+    <div class="nav-item" onclick="navTo('student',this)"><span class="icon">🎓</span><span class="nav-label">Student Panel</span></div>
+    <div class="nav-item" onclick="navTo('teacher',this)"><span class="icon">👨‍🏫</span><span class="nav-label">Teacher Panel</span></div>
+    <div class="nav-item" onclick="navTo('reports',this)"><span class="icon">📊</span><span class="nav-label">Reports</span></div>
+    <div class="nav-item" onclick="navTo('departments',this)"><span class="icon">🏛️</span><span class="nav-label">Departments</span></div>
+    <div class="nav-item" onclick="navTo('about',this)"><span class="icon">ℹ️</span><span class="nav-label">About</span></div>
+    <div class="nav-item" onclick="doLogout()" style="margin-top:auto;"><span class="icon">🚪</span><span class="nav-label">Logout</span></div>
+    <div class="sidebar-quote">Education is the most powerful weapon which you can use to change the world.</div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="univ-logo-area">
+        <div class="univ-badge">EAU</div>
+        <div class="univ-text">
+          <h1>EAST AFRICAN UNIVERSITY</h1>
+          <p>QARDHO CAMPUS</p>
+          <span>Attendance Management System</span>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="clock-box">
+          <div class="clock-date" id="clockDate">—</div>
+          <div class="clock-time" id="clockTime">--:--</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+          <div style="font-size:.78rem;color:var(--muted);">Logged in as</div>
+          <div style="font-size:.85rem;color:var(--cyan);font-weight:600;" id="topUserName">—</div>
+          <button class="btn btn-sm btn-outline" onclick="doLogout()" style="font-size:.72rem;padding:4px 10px;">Logout</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN -->
+    <div class="main">
+
+      <!-- ── HOME ── -->
+      <div class="section active" id="sec-home">
+        <div style="margin-bottom:24px;">
+          <h2 style="font-family:'Orbitron',sans-serif;font-size:1.3rem;background:linear-gradient(90deg,var(--cyan),var(--cyan2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Welcome Back 👋</h2>
+          <p style="color:var(--muted);margin-top:4px;font-size:.87rem;">East Africa University Qardho – Attendance Management System</p>
+        </div>
+        <div class="stats-row" id="homeStats"></div>
+        <div class="two-col" style="margin-top:0;">
+          <div class="card">
+            <div class="card-head"><div class="ch-icon">⚡</div><div><h3>Quick Actions</h3><p>Fast access</p></div></div>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <button class="btn btn-cyan" style="text-align:left;width:100%;padding:13px 16px;" onclick="navToId('student')">🎓 Mark My Attendance</button>
+              <button class="btn btn-outline" style="text-align:left;width:100%;padding:13px 16px;" onclick="navToId('teacher')">👨‍🏫 Teacher – Take Attendance</button>
+              <button class="btn btn-outline" style="text-align:left;width:100%;padding:13px 16px;" onclick="navToId('reports')">📊 View Reports</button>
+              <button class="btn btn-outline" style="text-align:left;width:100%;padding:13px 16px;" onclick="showRegister()">➕ Register New Student</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div class="ch-icon">📅</div><div><h3>Today's Info</h3><p id="todayDayLbl">—</p></div></div>
+            <div id="homeToday"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── STUDENT PANEL ── -->
+      <div class="section" id="sec-student">
+        <h2 style="font-family:'Orbitron',sans-serif;font-size:1.1rem;color:var(--cyan);margin-bottom:20px;">🎓 Student Panel</h2>
+        <div class="two-col">
+          <!-- LEFT: Mark Attendance -->
+          <div class="card">
+            <div class="card-head"><div class="ch-icon">🎓</div><div><h3>Student Attendance</h3><p>Mark your attendance</p></div></div>
+            <div class="field">
+              <label>STUDENT NAME</label>
+              <div class="field-wrap"><span class="fi">👤</span>
+                <input list="studentList" id="stu_name" placeholder="Search your name..." oninput="autoFillStudentId()"/>
+                <datalist id="studentList"></datalist>
+              </div>
+            </div>
+            <div class="field">
+              <label>STUDENT ID</label>
+              <div class="field-wrap"><span class="fi">🪪</span>
+                <input id="stu_id" placeholder="EAU-CS-001" readonly/>
+              </div>
+            </div>
+            <div class="field">
+              <label>COURSE</label>
+              <div class="field-wrap"><span class="fi">📚</span>
+                <select id="stu_course">
+                  <option value="CS801">Theory of Computing</option>
+                  <option value="CS802">ASP.NET</option>
+                  <option value="CS803">Somali Culture</option>
+                  <option value="CS804">Cloud Computing</option>
+                  <option value="CS805">Industrial Field Training</option>
+                </select>
+              </div>
+            </div>
+            <button class="btn-mark" onclick="studentMarkAttendance()">
+              <span>✅</span> Mark Attendance
+            </button>
+            <div class="success-msg" id="stuSuccess">
+              <span class="sm-icon">✅</span>
+              <div><div class="sm-text" id="stuSuccessText">Attendance Saved Successfully!</div><div style="font-size:.75rem;color:var(--muted);margin-top:2px;" id="stuSuccessTime"></div></div>
+            </div>
+            <!-- QR -->
+            <div class="qr-section">
+              <h4>📷 Scan QR Code</h4>
+              <p>Scan the QR to mark attendance</p>
+              <div id="qrBox" style="display:none;">
+                <div class="qr-box"><div id="qrcode"></div></div>
+              </div>
+              <button class="btn-qr" onclick="toggleQR()"><span>📱</span> <span id="qrBtnTxt">Show QR Code</span></button>
+            </div>
+          </div>
+          <!-- RIGHT: Report -->
+          <div class="card">
+            <div class="card-head"><div class="ch-icon">📋</div><div><h3>Attendance Report</h3><p>View all student attendance</p></div></div>
+            <div class="stats-row" style="grid-template-columns:repeat(4,1fr);" id="repStats"></div>
+            <div class="search-wrap">
+              <span class="si">🔍</span>
+              <input placeholder="Search student name or ID..." id="repSearch" oninput="filterRepTable()"/>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>#</th><th>Student Name</th><th>Student ID</th><th>Status</th><th>Time</th></tr></thead>
+                <tbody id="repBody"></tbody>
+              </table>
+            </div>
+            <div class="dl-row">
+              <button class="dl-btn pdf" onclick="downloadPDF()">⬇️ Download PDF</button>
+              <button class="dl-btn excel" onclick="downloadExcel()">📊 Download Excel</button>
+              <button class="dl-btn clear" onclick="clearTodayRecords()">🗑️ Clear Records</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── TEACHER PANEL ── -->
+      <div class="section" id="sec-teacher">
+        <h2 style="font-family:'Orbitron',sans-serif;font-size:1.1rem;color:var(--cyan);margin-bottom:20px;">👨‍🏫 Teacher Panel</h2>
+        <div class="card" style="margin-bottom:20px;">
+          <div class="card-head"><div class="ch-icon">🔍</div><div><h3>Select Class</h3><p>Choose department, semester & course</p></div></div>
+          <div class="att-controls">
+            <select id="t_dept" onchange="tLoadSemesters()">
+              <option value="">-- Department --</option>
+            </select>
+            <select id="t_sem" onchange="tLoadCourses()"><option value="">-- Semester --</option></select>
+            <select id="t_course"><option value="">-- Course --</option></select>
+            <input type="date" id="t_date"/>
+            <button class="btn btn-cyan" onclick="tLoadSheet()">Load Sheet →</button>
+          </div>
+        </div>
+        <div id="teacherSheet" style="display:none;">
+          <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+              <div class="card-head" style="margin-bottom:0;"><div class="ch-icon">✅</div><div><h3 id="tSheetTitle">Attendance Sheet</h3><p id="tSheetSub">—</p></div></div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <button class="btn btn-sm btn-cyan" onclick="tMarkAll('P')">✅ All Present</button>
+                <button class="btn btn-sm" style="background:rgba(255,71,87,.15);color:var(--red);border:1px solid rgba(255,71,87,.3);" onclick="tMarkAll('A')">❌ All Absent</button>
+                <button class="btn btn-sm btn-green" onclick="tSave()">💾 Save</button>
+              </div>
+            </div>
+            <div id="tSaveMsg" class="success-msg"><span class="sm-icon">✅</span><div class="sm-text">Attendance saved!</div></div>
+            <div style="display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap;" id="tSummary"></div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>#</th><th>Student Name</th><th>ID</th><th>Status</th></tr></thead>
+                <tbody id="tBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── REPORTS ── -->
+      <div class="section" id="sec-reports">
+        <h2 style="font-family:'Orbitron',sans-serif;font-size:1.1rem;color:var(--cyan);margin-bottom:20px;">📊 Reports</h2>
+        <div class="rep-tabs">
+          <button class="rep-tab active" onclick="repTab('byStudent',this)">By Student</button>
+          <button class="rep-tab" onclick="repTab('byCourse',this)">By Course</button>
+          <button class="rep-tab" onclick="repTab('summary',this)">Summary</button>
+        </div>
+        <div id="rep-byStudent">
+          <div class="card">
+            <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
+              <div class="card-head" style="margin-bottom:0;"><div class="ch-icon">🎓</div><div><h3>Student Records</h3></div></div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <select id="rep_dept_filter" style="padding:7px 12px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:.82rem;outline:none;" onchange="buildStudentRep()">
+                  <option value="">All Departments</option>
+                </select>
+                <input style="padding:7px 12px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:.82rem;outline:none;width:180px;" placeholder="🔍 Search..." id="repSearch2" oninput="filterRepTable2()"/>
+                <button class="btn btn-sm btn-cyan" onclick="window.print()">🖨️ Print</button>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>#</th><th>Name</th><th>Dept</th><th>Sem</th><th>Present</th><th>Absent</th><th>Late</th><th>Rate</th></tr></thead>
+                <tbody id="repBody2"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div id="rep-byCourse" style="display:none;">
+          <div class="card">
+            <div class="card-head"><div class="ch-icon">📚</div><div><h3>Course Attendance</h3></div></div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Course</th><th>Department</th><th>Semester</th><th>Sessions</th><th>Avg Rate</th></tr></thead>
+                <tbody id="repCourseBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div id="rep-summary" style="display:none;">
+          <div class="stats-row" id="repSumStats" style="grid-template-columns:repeat(auto-fill,minmax(160px,1fr));"></div>
+          <div class="card">
+            <div class="card-head"><div class="ch-icon">🏛️</div><div><h3>Department Health</h3></div></div>
+            <div id="deptHealth"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── DEPARTMENTS ── -->
+      <div class="section" id="sec-departments">
+        <h2 style="font-family:'Orbitron',sans-serif;font-size:1.1rem;color:var(--cyan);margin-bottom:20px;">🏛️ Departments</h2>
+        <div class="dept-grid" id="deptGrid"></div>
+      </div>
+
+      <!-- ── ABOUT ── -->
+      <div class="section" id="sec-about">
+        <div class="about-hero">
+          <div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--cyan),var(--purple));display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif;font-size:1.1rem;color:#fff;font-weight:700;margin:0 auto 16px;box-shadow:0 0 30px rgba(0,212,255,.4);">EAU</div>
+          <h2>East Africa University – Qardho</h2>
+          <p style="margin-top:12px;">Jaamacadda Bariga Afrika – Faraca Qardho<br/>Attendance Management System v2.0</p>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;">
+          ${[
+            {icon:'💻',name:'Computer Science',students:44},
+            {icon:'📊',name:'Accounting & Finance',students:0},
+            {icon:'☪️',name:'Sharia Islamic',students:0},
+            {icon:'🤝',name:'Social Work',students:0},
+            {icon:'🏛️',name:'Public Administration',students:0},
+            {icon:'🐾',name:'Veterinary Science',students:0},
+            {icon:'🏥',name:'Nursing',students:0},
+            {icon:'⚕️',name:'Clinical',students:0},
+          ].map(d=>`<div class="card" style="text-align:center;">
+            <div style="font-size:2rem;margin-bottom:8px;">${d.icon}</div>
+            <div style="font-weight:600;color:var(--text);">${d.name}</div>
+            <div style="font-size:.75rem;color:var(--cyan);margin-top:4px;">${d.students} students</div>
+          </div>`).join('')}
+        </div>
+      </div>
+
+    </div><!-- /main -->
+    <footer>💙 © 2025 <span>East African University – Qardho Campus</span>. All rights reserved.</footer>
+  </div><!-- /content -->
+</div><!-- /app -->
+
+<script>
+/* ══════════════════════════════════════
+   DATA
+══════════════════════════════════════ */
+const DEPARTMENTS=[
+  {id:'cs',name:'Computer Science',icon:'💻'},
+  {id:'af',name:'Accounting & Finance',icon:'📊'},
+  {id:'is',name:'Sharia Islamic',icon:'☪️'},
+  {id:'sw',name:'Social Work',icon:'🤝'},
+  {id:'pa',name:'Public Administration',icon:'🏛️'},
+  {id:'vs',name:'Veterinary Science',icon:'🐾'},
+  {id:'ns',name:'Nursing',icon:'🏥'},
+  {id:'cl',name:'Clinical',icon:'⚕️'},
+];
+
+const COURSES={
+  cs:{
+    8:[{code:'CS801',name:'Theory of Computing'},{code:'CS802',name:'ASP.NET'},{code:'CS803',name:'Somali Culture'},{code:'CS804',name:'Cloud Computing'},{code:'CS805',name:'Industrial Field Training'}],
+    7:[{code:'CS701',name:'Database Systems'},{code:'CS702',name:'Software Engineering'},{code:'CS703',name:'Computer Networks'}],
+    6:[{code:'CS601',name:'Algorithms'},{code:'CS602',name:'Operating Systems'},{code:'CS603',name:'Web Development'}],
+  },
+  af:{8:[{code:'AF801',name:'Advanced Auditing'},{code:'AF802',name:'Financial Management'},{code:'AF803',name:'Taxation'}]},
+  is:{8:[{code:'IS801',name:'Islamic Jurisprudence'},{code:'IS802',name:'Quranic Studies'},{code:'IS803',name:'Islamic History'}]},
+  sw:{8:[{code:'SW801',name:'Community Development'},{code:'SW802',name:'Social Policy'},{code:'SW803',name:'Counselling'}]},
+  pa:{8:[{code:'PA801',name:'Public Finance'},{code:'PA802',name:'Administrative Law'},{code:'PA803',name:'Policy Analysis'}]},
+  vs:{8:[{code:'VS801',name:'Veterinary Medicine'},{code:'VS802',name:'Animal Surgery'},{code:'VS803',name:'Pharmacology'}]},
+  ns:{8:[{code:'NS801',name:'Clinical Nursing'},{code:'NS802',name:'Anatomy'},{code:'NS803',name:'Pharmacology'}]},
+  cl:{8:[{code:'CL801',name:'Internal Medicine'},{code:'CL802',name:'Paediatrics'},{code:'CL803',name:'Surgery'}]},
+};
+// fill missing semesters
+DEPARTMENTS.forEach(d=>{
+  if(!COURSES[d.id])COURSES[d.id]={};
+  for(let s=1;s<=8;s++){
+    if(!COURSES[d.id][s])COURSES[d.id][s]=[{code:`${d.id.toUpperCase()}${s}01`,name:'General Studies'},{code:`${d.id.toUpperCase()}${s}02`,name:'Research Methods'}];
+  }
+});
+
+const CS8=[
+  {id:'EAU-CS-001',name:'Abdiaziz Ali Ainab Ahmed',gender:'Male'},
+  {id:'EAU-CS-002',name:'Abdikani Yusuf Daad Isse',gender:'Male'},
+  {id:'EAU-CS-003',name:'Abdinasir Gulled Jama Mohamud',gender:'Male'},
+  {id:'EAU-CS-004',name:'Abdirahman Abdikarim Hassan',gender:'Male'},
+  {id:'EAU-CS-005',name:'Abdirahman Abdirashid Yusuf Muse',gender:'Male'},
+  {id:'EAU-CS-006',name:'Abdirahman Mahad Aw-Abdi Samatar',gender:'Male'},
+  {id:'EAU-CS-007',name:'Abdishakur Abdullahi Said Muse',gender:'Male'},
+  {id:'EAU-CS-008',name:'Abdullahi Hared Mohamed Abdi',gender:'Male'},
+  {id:'EAU-CS-009',name:'Abdullahi Mohamed Hared Hirad',gender:'Male'},
+  {id:'EAU-CS-010',name:'Abdullahi Muse Abdi Ali',gender:'Male'},
+  {id:'EAU-CS-011',name:'Ahmed Abdullahi Mohamud Abdi',gender:'Male'},
+  {id:'EAU-CS-012',name:'Aisha Mohamed Omar Mohamed',gender:'Female'},
+  {id:'EAU-CS-013',name:'Aisho Abdirahman Osman Samater',gender:'Female'},
+  {id:'EAU-CS-014',name:'Amino Abdullahi Yusuf Muse',gender:'Female'},
+  {id:'EAU-CS-015',name:'Deko Abdihakin Waberi Mohamed',gender:'Female'},
+  {id:'EAU-CS-016',name:'Fadumo Liban Barre Mohamud',gender:'Female'},
+  {id:'EAU-CS-017',name:'Fahimo Mohamed Abdi Ahmed',gender:'Female'},
+  {id:'EAU-CS-018',name:'Faiso Abdirashid Mohamud Said',gender:'Female'},
+  {id:'EAU-CS-019',name:'Fuad Mohamed Ali Osman',gender:'Male'},
+  {id:'EAU-CS-020',name:'Hafso Abdisamad Dahir Ahmed',gender:'Female'},
+  {id:'EAU-CS-021',name:'Hawo Osman Mohamud Farah',gender:'Female'},
+  {id:'EAU-CS-022',name:'Hibaq Yasin Mohamed Omar',gender:'Female'},
+  {id:'EAU-CS-023',name:'Khadar Said Nur',gender:'Male'},
+  {id:'EAU-CS-024',name:'Khadro Liban Jama Rabah',gender:'Female'},
+  {id:'EAU-CS-025',name:'Maryan Osman Omar Yusuf Mohamud',gender:'Female'},
+  {id:'EAU-CS-026',name:'Mohamed Ahmed Ali Salah',gender:'Male'},
+  {id:'EAU-CS-027',name:'Mohamed Ali Mohamed Farah',gender:'Male'},
+  {id:'EAU-CS-028',name:'Mohamed Faysal Buh Nur',gender:'Male'},
+  {id:'EAU-CS-029',name:'Mohamed Liban Ahmed Said',gender:'Male'},
+  {id:'EAU-CS-030',name:'Mohamed Mohamud Hared Hassan',gender:'Male'},
+  {id:'EAU-CS-031',name:'Mohamed Said Mohamed Osman',gender:'Male'},
+  {id:'EAU-CS-032',name:'Osman Mire Hussein Ahmed',gender:'Male'},
+  {id:'EAU-CS-033',name:'Rodo Abdi Mohamud Barre',gender:'Female'},
+  {id:'EAU-CS-034',name:'Sabirin Ali Thabit',gender:'Female'},
+  {id:'EAU-CS-035',name:'Sahro Dahir Khalid Aw Muse',gender:'Female'},
+  {id:'EAU-CS-036',name:'Said Mohamed Abdisalan',gender:'Male'},
+  {id:'EAU-CS-037',name:'Said Mohamed Said',gender:'Male'},
+  {id:'EAU-CS-038',name:'Sainab Mohamud Mohamed Farah',gender:'Female'},
+  {id:'EAU-CS-039',name:'Salma Abdullahi Hussein',gender:'Female'},
+  {id:'EAU-CS-040',name:'Salmo Abdirisak Ali Mohamud',gender:'Female'},
+  {id:'EAU-CS-041',name:'Sekeriye Mohamed Muse Shire',gender:'Male'},
+  {id:'EAU-CS-042',name:'Suheyb Faysal Mohamed Ahmed',gender:'Male'},
+  {id:'EAU-CS-043',name:'Sumayo Isse Abdikarim Ali',gender:'Female'},
+  {id:'EAU-CS-044',name:'Yahye Osman Said Abdi',gender:'Male'},
+];
+
+let STUDENTS=JSON.parse(localStorage.getItem('eau2_students')||'null')||CS8.map(s=>({...s,dept:'cs',sem:8}));
+let ATT=JSON.parse(localStorage.getItem('eau2_att')||'{}');
+let TODAY_ATT=JSON.parse(localStorage.getItem('eau2_today')||'[]'); // [{name,id,status,time}]
+
+const USERS=[
+  {user:'admin',pass:'admin123',role:'admin',name:'Administrator'},
+  {user:'teacher1',pass:'teach123',role:'teacher',name:'Dr. Abdirahman'},
+  {user:'student',pass:'stud123',role:'student',name:'Student'},
+];
+let currentUser=null;
+
+/* ══ PARTICLES ══ */
+(function(){
+  const c=document.getElementById('particles');
+  for(let i=0;i<18;i++){
+    const p=document.createElement('div');
+    p.className='particle';
+    const size=Math.random()*4+2;
+    p.style.cssText=`width:${size}px;height:${size}px;left:${Math.random()*100}%;animation-duration:${Math.random()*15+8}s;animation-delay:${Math.random()*10}s;opacity:${Math.random()*.5+.2};`;
+    c.appendChild(p);
+  }
+})();
+
+/* ══ CLOCK ══ */
+function updateClock(){
+  const now=new Date();
+  const days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  document.getElementById('clockDate').textContent=`${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+  const h=now.getHours().toString().padStart(2,'0');
+  const m=now.getMinutes().toString().padStart(2,'0');
+  const s=now.getSeconds().toString().padStart(2,'0');
+  document.getElementById('clockTime').textContent=`${h}:${m}:${s}`;
+}
+setInterval(updateClock,1000);updateClock();
+
+/* ══ AUTH ══ */
+let loginRole='student';
+function setRole(r){
+  loginRole=r;
+  ['student','teacher','admin'].forEach(x=>document.getElementById('role'+x.charAt(0).toUpperCase()+x.slice(1)).classList.remove('active'));
+  document.getElementById('role'+r.charAt(0).toUpperCase()+r.slice(1)).classList.add('active');
+}
+function doLogin(){
+  const u=document.getElementById('loginUser').value.trim();
+  const p=document.getElementById('loginPass').value.trim();
+  const found=USERS.find(x=>x.user===u&&x.pass===p)||
+    (u&&p?{user:u,pass:p,role:loginRole,name:u}:null); // allow any for demo
+  if(found||u){
+    currentUser=found||{user:u,role:loginRole,name:u};
+    document.getElementById('topUserName').textContent=currentUser.name;
+    document.getElementById('loginOverlay').style.display='none';
+    document.getElementById('appWrap').style.display='flex';
+    initApp();
+  } else {
+    document.getElementById('loginErr').style.display='block';
+    setTimeout(()=>document.getElementById('loginErr').style.display='none',2500);
+  }
+}
+function doLogout(){
+  currentUser=null;
+  document.getElementById('appWrap').style.display='none';
+  document.getElementById('loginOverlay').style.display='flex';
+}
+function showRegister(){
+  document.getElementById('loginOverlay').style.display='none';
+  document.getElementById('regOverlay').style.display='flex';
+}
+function showLogin(){
+  document.getElementById('regOverlay').style.display='none';
+  document.getElementById('loginOverlay').style.display='flex';
+}
+function doRegister(){
+  const fn=document.getElementById('r_fn').value.trim();
+  const ln=document.getElementById('r_ln').value.trim();
+  const id=document.getElementById('r_id').value.trim();
+  const dept=document.getElementById('r_dept').value.trim();
+  const sem=parseInt(document.getElementById('r_sem').value)||8;
+  const gen=document.getElementById('r_gen').value.trim();
+  const p1=document.getElementById('r_pass').value;
+  const p2=document.getElementById('r_pass2').value;
+  const msg=document.getElementById('regMsg');
+  if(!fn||!ln||!id){msg.style.cssText='display:block;color:var(--red)';msg.textContent='❌ Fill all required fields';return;}
+  if(p1!==p2){msg.style.cssText='display:block;color:var(--red)';msg.textContent='❌ Passwords do not match';return;}
+  const deptId=DEPARTMENTS.find(d=>d.name.toLowerCase()===dept.toLowerCase())?.id||dept.toLowerCase().replace(/\s/g,'').slice(0,2)||'cs';
+  STUDENTS.push({id,name:`${fn} ${ln}`,gender:gen||'—',dept:deptId,sem});
+  saveStudents();
+  msg.style.cssText='display:block;color:var(--green)';
+  msg.textContent=`✅ ${fn} ${ln} registered!`;
+  setTimeout(showLogin,1800);
+}
+
+/* ══ NAVIGATION ══ */
+function navTo(id,el){
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  if(el)el.classList.add('active');
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById('sec-'+id).classList.add('active');
+  if(id==='reports')initReports();
+  if(id==='departments')renderDeptGrid();
+  if(id==='student')initStudentPanel();
+  if(id==='teacher')initTeacherPanel();
+  if(id==='home')renderHome();
+}
+function navToId(id){
+  const nav=document.querySelector(`.nav-item:nth-child(${['home','student','teacher','reports','departments','about'].indexOf(id)+3})`);
+  navTo(id,null);
+  document.querySelectorAll('.nav-item').forEach(n=>{
+    if(n.textContent.toLowerCase().includes(id.toLowerCase().replace('-',' ')))n.classList.add('active');
+  });
+}
+
+/* ══ INIT ══ */
+function initApp(){
+  renderHome();
+  initStudentDatalist();
+  initTeacherDeptSelect();
+  initRepDeptFilter();
+  buildDeptGrid();
+  seedSampleData();
+}
+
+function renderHome(){
+  let totalP=0,totalA=0;
+  Object.values(ATT).forEach(r=>Object.values(r).forEach(v=>{if(v==='P')totalP++;if(v==='A')totalA++;}));
+  const rate=totalP+totalA>0?Math.round(totalP/(totalP+totalA)*100):0;
+  document.getElementById('homeStats').innerHTML=`
+    <div class="stat-box"><div class="sb-icon">🎓</div><div class="sb-val cyan">${STUDENTS.length}</div><div class="sb-lbl">Total Students</div></div>
+    <div class="stat-box"><div class="sb-icon">🏛️</div><div class="sb-val cyan">${DEPARTMENTS.length}</div><div class="sb-lbl">Departments</div></div>
+    <div class="stat-box"><div class="sb-icon">✅</div><div class="sb-val green">${totalP}</div><div class="sb-lbl">Present Records</div></div>
+    <div class="stat-box"><div class="sb-icon">❌</div><div class="sb-val red">${totalA}</div><div class="sb-lbl">Absent Records</div></div>
+    <div class="stat-box"><div class="sb-icon">📊</div><div class="sb-val gold">${rate}%</div><div class="sb-lbl">Overall Rate</div></div>
+    <div class="stat-box"><div class="sb-icon">📋</div><div class="sb-val cyan">${Object.keys(ATT).length}</div><div class="sb-lbl">Sessions</div></div>
+  `;
+  // today
+  const days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const today=days[new Date().getDay()];
+  const classDays=['Saturday','Sunday','Monday','Tuesday','Wednesday'];
+  const el=document.getElementById('homeToday');
+  document.getElementById('todayDayLbl').textContent=today;
+  if(classDays.includes(today)){
+    el.innerHTML=`<div style="background:rgba(0,212,255,.08);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px;">
+      <div style="font-weight:600;color:var(--cyan);">📅 ${today} — Class Day</div>
+      <div style="font-size:.82rem;color:var(--muted);margin-top:4px;">🕕 6:30 PM – 3:00 AM</div>
+    </div>
+    <div style="font-size:.82rem;color:var(--muted);">CS Sem 8 Courses:<br/>
+      ${COURSES.cs[8].map(c=>`<span style="display:inline-block;margin:3px 3px 0 0;padding:2px 9px;background:rgba(0,212,255,.1);border:1px solid var(--border);border-radius:5px;font-size:.76rem;color:var(--cyan);">${c.name}</span>`).join('')}
+    </div>`;
+  } else {
+    el.innerHTML=`<div style="text-align:center;padding:24px;color:var(--muted);">🌙<br/>No classes today (${today})<br/><span style="font-size:.78rem;">Class days: Sat–Wed</span></div>`;
+  }
+}
+
+/* ══ STUDENT PANEL ══ */
+function initStudentDatalist(){
+  const dl=document.getElementById('studentList');
+  dl.innerHTML=STUDENTS.map(s=>`<option value="${s.name}" data-id="${s.id}">${s.name}</option>`).join('');
+}
+function autoFillStudentId(){
+  const name=document.getElementById('stu_name').value;
+  const s=STUDENTS.find(x=>x.name===name);
+  document.getElementById('stu_id').value=s?s.id:'';
+}
+function initStudentPanel(){
+  initStudentDatalist();
+  renderRepStats();
+  renderRepTable();
+}
+function studentMarkAttendance(){
+  const name=document.getElementById('stu_name').value.trim();
+  const id=document.getElementById('stu_id').value.trim()||'—';
+  const course=document.getElementById('stu_course').value;
+  if(!name){alert('Please enter your name');return;}
+  const now=new Date();
+  const timeStr=now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+  const dateStr=now.toISOString().slice(0,10);
+  // save
+  const key=`cs_8_${course}_${dateStr}`;
+  if(!ATT[key])ATT[key]={};
+  ATT[key][id]='P';
+  saveAtt();
+  // today list
+  const existing=TODAY_ATT.findIndex(r=>r.id===id&&r.course===course);
+  if(existing>=0)TODAY_ATT[existing]={name,id,status:'Present',time:timeStr,course};
+  else TODAY_ATT.push({name,id,status:'Present',time:timeStr,course});
+  localStorage.setItem('eau2_today',JSON.stringify(TODAY_ATT));
+  // show success
+  document.getElementById('stuSuccessText').textContent=`Attendance Saved Successfully! 🎉`;
+  document.getElementById('stuSuccessTime').textContent=`Thank you ${name} – ${timeStr}`;
+  document.getElementById('stuSuccess').classList.add('show');
+  setTimeout(()=>document.getElementById('stuSuccess').classList.remove('show'),4000);
+  renderRepStats();
+  renderRepTable();
+  // generate QR
+  generateQR(name,id);
+}
+function renderRepStats(){
+  const today=new Date().toISOString().slice(0,10);
+  const todayRecords=Object.entries(ATT).filter(([k])=>k.endsWith(today));
+  let present=0,absent=0;
+  todayRecords.forEach(([,r])=>Object.values(r).forEach(v=>{if(v==='P')present++;if(v==='A')absent++;}));
+  document.getElementById('repStats').innerHTML=`
+    <div class="stat-box"><div class="sb-icon">👥</div><div class="sb-val cyan">${STUDENTS.length}</div><div class="sb-lbl">Total Students</div></div>
+    <div class="stat-box"><div class="sb-icon">✅</div><div class="sb-val green">${present}</div><div class="sb-lbl">Present</div></div>
+    <div class="stat-box"><div class="sb-icon">❌</div><div class="sb-val red">${absent}</div><div class="sb-lbl">Absent</div></div>
+    <div class="stat-box"><div class="sb-icon">📅</div><div class="sb-val gold">${new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'})}</div><div class="sb-lbl">Today</div></div>
+  `;
+}
+function renderRepTable(){
+  const q=document.getElementById('repSearch').value.toLowerCase();
+  let rows=TODAY_ATT.filter(r=>!q||r.name.toLowerCase().includes(q)||r.id.toLowerCase().includes(q));
+  document.getElementById('repBody').innerHTML=rows.length?rows.map((r,i)=>`
+    <tr>
+      <td>${i+1}</td>
+      <td><strong>${r.name}</strong></td>
+      <td style="color:var(--muted);font-size:.79rem">${r.id}</td>
+      <td><span class="badge-present">${r.status}</span></td>
+      <td style="color:var(--muted)">${r.time}</td>
+    </tr>
+  `).join(''):`<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px;">No records yet today.</td></tr>`;
+}
+function filterRepTable(){renderRepTable();}
+
+/* QR */
+let qrVisible=false;
+function toggleQR(){
+  qrVisible=!qrVisible;
+  document.getElementById('qrBox').style.display=qrVisible?'block':'none';
+  document.getElementById('qrBtnTxt').textContent=qrVisible?'Hide QR Code':'Show QR Code';
+}
+function generateQR(name,id){
+  const el=document.getElementById('qrcode');
+  el.innerHTML='';
+  if(typeof QRCode!=='undefined'){
+    new QRCode(el,{text:`EAU-ATT|${name}|${id}|${new Date().toISOString()}`,width:140,height:140,colorDark:'#000',colorLight:'#fff'});
+    document.getElementById('qrBox').style.display='block';
+    document.getElementById('qrBtnTxt').textContent='Hide QR Code';
+    qrVisible=true;
+  }
+}
+
+/* ══ TEACHER PANEL ══ */
+function initTeacherPanel(){
+  const sel=document.getElementById('t_dept');
+  sel.innerHTML='<option value="">-- Department --</option>'+DEPARTMENTS.map(d=>`<option value="${d.id}">${d.name}</option>`).join('');
+  document.getElementById('t_date').valueAsDate=new Date();
+}
+function tLoadSemesters(){
+  const dept=document.getElementById('t_dept').value;
+  const sems=Object.keys(COURSES[dept]||{});
+  document.getElementById('t_sem').innerHTML='<option value="">-- Semester --</option>'+sems.map(s=>`<option value="${s}">Semester ${s}</option>`).join('');
+  if(dept==='cs')document.getElementById('t_sem').value='8';
+  tLoadCourses();
+}
+function tLoadCourses(){
+  const dept=document.getElementById('t_dept').value;
+  const sem=document.getElementById('t_sem').value;
+  const courses=(COURSES[dept]&&COURSES[dept][sem])||[];
+  document.getElementById('t_course').innerHTML='<option value="">-- Course --</option>'+courses.map(c=>`<option value="${c.code}">${c.name}</option>`).join('');
+}
+function tLoadSheet(){
+  const dept=document.getElementById('t_dept').value;
+  const sem=parseInt(document.getElementById('t_sem').value);
+  const course=document.getElementById('t_course').value;
+  const date=document.getElementById('t_date').value;
+  if(!dept||!sem||!course||!date){alert('Please select all fields');return;}
+  const deptObj=DEPARTMENTS.find(d=>d.id===dept);
+  const courseObj=(COURSES[dept][sem]||[]).find(c=>c.code===course);
+  document.getElementById('tSheetTitle').textContent=`${courseObj?courseObj.name:course}`;
+  document.getElementById('tSheetSub').textContent=`${deptObj?deptObj.name:dept} — Semester ${sem} — ${date}`;
+  const key=`${dept}_${sem}_${course}_${date}`;
+  const existing=ATT[key]||{};
+  let students=STUDENTS.filter(s=>s.dept===dept&&s.sem===sem);
+  if(dept==='cs'&&sem===8){
+    const ids=new Set(students.map(s=>s.id));
+    CS8.forEach(s=>{if(!ids.has(s.id))students.push({...s,dept:'cs',sem:8});});
+  }
+  document.getElementById('tBody').innerHTML=students.map((s,i)=>{
+    const st=existing[s.id]||'';
+    return `<tr>
+      <td>${i+1}</td>
+      <td><strong>${s.name}</strong></td>
+      <td style="color:var(--muted);font-size:.79rem">${s.id}</td>
+      <td>
+        <div class="att-mark-row">
+          <button class="att-btn P ${st==='P'?'sel-P':''}" onclick="tSetStatus('${s.id}','P',this)">P</button>
+          <button class="att-btn A ${st==='A'?'sel-A':''}" onclick="tSetStatus('${s.id}','A',this)">A</button>
+          <button class="att-btn L ${st==='L'?'sel-L':''}" onclick="tSetStatus('${s.id}','L',this)">L</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+  document.getElementById('teacherSheet').style.display='block';
+  tUpdateSummary(students,existing);
+  document.getElementById('tSaveMsg').classList.remove('show');
+}
+function tSetStatus(id,st,btn){
+  const row=btn.closest('tr');
+  row.querySelectorAll('.att-btn').forEach(b=>{b.className=b.className.replace(/sel-[PAL]/g,'').trim();});
+  btn.classList.add(`sel-${st}`);
+  tLiveSummary();
+}
+function tMarkAll(st){
+  document.querySelectorAll('#tBody tr').forEach(tr=>{
+    tr.querySelectorAll('.att-btn').forEach(b=>b.className=b.className.replace(/sel-[PAL]/g,'').trim());
+    tr.querySelector(`.att-btn.${st}`).classList.add(`sel-${st}`);
+  });
+  tLiveSummary();
+}
+function tLiveSummary(){
+  const p=document.querySelectorAll('.att-btn.sel-P').length;
+  const a=document.querySelectorAll('.att-btn.sel-A').length;
+  const l=document.querySelectorAll('.att-btn.sel-L').length;
+  const t=document.querySelectorAll('#tBody tr').length;
+  document.getElementById('tSummary').innerHTML=`
+    <span style="background:rgba(0,230,118,.1);border:1px solid rgba(0,230,118,.2);padding:5px 12px;border-radius:20px;font-size:.78rem;color:var(--green);">✅ Present: ${p}</span>
+    <span style="background:rgba(255,71,87,.1);border:1px solid rgba(255,71,87,.2);padding:5px 12px;border-radius:20px;font-size:.78rem;color:var(--red);">❌ Absent: ${a}</span>
+    <span style="background:rgba(255,215,0,.1);border:1px solid rgba(255,215,0,.2);padding:5px 12px;border-radius:20px;font-size:.78rem;color:var(--gold);">⏰ Late: ${l}</span>
+    <span style="background:rgba(0,212,255,.1);border:1px solid var(--border);padding:5px 12px;border-radius:20px;font-size:.78rem;color:var(--cyan);">📈 Rate: ${t>0?Math.round((p+l)/t*100):0}%</span>
+  `;
+}
+function tUpdateSummary(students,existing){
+  const p=Object.values(existing).filter(v=>v==='P').length;
+  const a=Object.values(existing).filter(v=>v==='A').length;
+  const l=Object.values(existing).filter(v=>v==='L').length;
+  const t=students.length;
+  document.getElementById('tSummary').innerHTML=`
+    <span style="background:rgba(0,230,118,.1);border:1px solid rgba(0,230,118,.2);padding:5px 12px;border-radius:20px;font-size:.78rem;color:var(--green);">✅ Present: ${p}</span>
+    <span style="background:rgba(255,71,87,.1);border:1px solid rgba(255,71,87,.2);padding:5px 12px;border-radius:20px;font-size:.78rem;color:var(--red);">❌ Absent: ${a}</span>
+    <span style="background:rgba(255,215,0,.1);border:1px solid rgba(255,215,0,.2);padding:5px 12px;border-radius:20px;font-size:.78rem;color:var(--gold);">⏰ Late: ${l}</span>
+    <span style="background:rgba(0,212,255,.1);border:1px solid var(--border);padding:5px 12px;border-radius:20px;font-size:.78rem;color:var(--cyan);">📈 Rate: ${t>0?Math.round((p+l)/t*100):0}%</span>
+  `;
+}
+function tSave(){
+  const dept=document.getElementById('t_dept').value;
+  const sem=parseInt(document.getElementById('t_sem').value);
+  const course=document.getElementById('t_course').value;
+  const date=document.getElementById('t_date').value;
+  const key=`${dept}_${sem}_${course}_${date}`;
+  const rec={};
+  document.querySelectorAll('#tBody tr').forEach(tr=>{
+    const id=tr.cells[2].textContent.trim();
+    const active=tr.querySelector('.att-btn[class*="sel-"]');
+    if(active){const st=active.classList.contains('sel-P')?'P':active.classList.contains('sel-A')?'A':'L';rec[id]=st;}
+  });
+  ATT[key]=rec;saveAtt();
+  const msg=document.getElementById('tSaveMsg');
+  msg.classList.add('show');
+  setTimeout(()=>msg.classList.remove('show'),3000);
+}
+
+/* ══ REPORTS ══ */
+function initReports(){
+  buildStudentRep();
+  buildCourseRep();
+}
+function repTab(id,el){
+  ['byStudent','byCourse','summary'].forEach(t=>{
+    const el2=document.getElementById('rep-'+t);
+    if(el2)el2.style.display='none';
+  });
+  document.querySelectorAll('.rep-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('rep-'+id).style.display='block';
+  el.classList.add('active');
+  if(id==='summary')buildRepSummary();
+  if(id==='byCourse')buildCourseRep();
+}
+function initRepDeptFilter(){
+  document.getElementById('rep_dept_filter').innerHTML='<option value="">All Departments</option>'+DEPARTMENTS.map(d=>`<option value="${d.id}">${d.name}</option>`).join('');
+}
+function buildStudentRep(){
+  const filter=document.getElementById('rep_dept_filter').value;
+  let all=[...STUDENTS];
+  if(!filter||filter==='cs'){const ids=new Set(all.map(s=>s.id));CS8.forEach(s=>{if(!ids.has(s.id))all.push({...s,dept:'cs',sem:8});});}
+  let students=filter?all.filter(s=>s.dept===filter):all;
+  document.getElementById('repBody2').innerHTML=students.map((s,i)=>{
+    let p=0,a=0,l=0;
+    Object.entries(ATT).forEach(([k,r])=>{
+      const pts=k.split('_');
+      if(pts[0]===s.dept&&parseInt(pts[1])===s.sem){const v=r[s.id];if(v==='P')p++;else if(v==='A')a++;else if(v==='L')l++;}
+    });
+    const t=p+a+l;
+    const rate=t>0?Math.round((p+l)/t*100):0;
+    const cls=rate>=75?'green':rate>=50?'gold':'red';
+    const dept=DEPARTMENTS.find(d=>d.id===s.dept);
+    return `<tr>
+      <td>${i+1}</td><td><strong>${s.name}</strong></td>
+      <td style="font-size:.8rem;color:var(--muted)">${dept?dept.name:s.dept}</td>
+      <td>${s.sem}</td>
+      <td><span class="badge-present">${p}</span></td>
+      <td><span class="badge-absent">${a}</span></td>
+      <td><span class="badge-late">${l}</span></td>
+      <td style="color:var(--${cls});font-weight:700;">${rate}%</td>
+    </tr>`;
+  }).join('');
+}
+function filterRepTable2(){
+  const q=document.getElementById('repSearch2').value.toLowerCase();
+  document.querySelectorAll('#repBody2 tr').forEach(tr=>{
+    tr.style.display=tr.textContent.toLowerCase().includes(q)?'':'none';
+  });
+}
+function buildCourseRep(){
+  let rows=[];
+  DEPARTMENTS.forEach(dept=>{
+    Object.entries(COURSES[dept.id]||{}).forEach(([sem,courses])=>{
+      courses.forEach(c=>{
+        const sessions=Object.entries(ATT).filter(([k])=>k.startsWith(`${dept.id}_${sem}_${c.code}_`));
+        let tp=0,tt=0;
+        sessions.forEach(([,r])=>Object.values(r).forEach(v=>{tt++;if(v==='P'||v==='L')tp++;}));
+        const avg=tt>0?Math.round(tp/tt*100):0;
+        rows.push(`<tr><td><strong>${c.name}</strong><br/><span style="font-size:.74rem;color:var(--muted)">${c.code}</span></td>
+          <td style="font-size:.82rem">${dept.name}</td><td>Sem ${sem}</td>
+          <td>${sessions.length}</td>
+          <td style="color:${avg>=75?'var(--green)':avg>=50?'var(--gold)':'var(--red)'};font-weight:700;">${avg}%</td></tr>`);
+      });
+    });
+  });
+  document.getElementById('repCourseBody').innerHTML=rows.join('')||'<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px;">No sessions yet.</td></tr>';
+}
+function buildRepSummary(){
+  let tp=0,ta=0;
+  Object.values(ATT).forEach(r=>Object.values(r).forEach(v=>{if(v==='P')tp++;if(v==='A')ta++;}));
+  const rate=tp+ta>0?Math.round(tp/(tp+ta)*100):0;
+  document.getElementById('repSumStats').innerHTML=`
+    <div class="stat-box"><div class="sb-icon">🎓</div><div class="sb-val cyan">${STUDENTS.length}</div><div class="sb-lbl">Students</div></div>
+    <div class="stat-box"><div class="sb-icon">📋</div><div class="sb-val cyan">${Object.keys(ATT).length}</div><div class="sb-lbl">Sessions</div></div>
+    <div class="stat-box"><div class="sb-icon">✅</div><div class="sb-val green">${tp}</div><div class="sb-lbl">Present</div></div>
+    <div class="stat-box"><div class="sb-icon">❌</div><div class="sb-val red">${ta}</div><div class="sb-lbl">Absent</div></div>
+    <div class="stat-box"><div class="sb-icon">📈</div><div class="sb-val gold">${rate}%</div><div class="sb-lbl">Overall Rate</div></div>
+  `;
+  document.getElementById('deptHealth').innerHTML=DEPARTMENTS.map(d=>{
+    let p=0,t=0;
+    Object.entries(ATT).forEach(([k,r])=>{if(k.startsWith(d.id+'_'))Object.values(r).forEach(v=>{t++;if(v==='P'||v==='L')p++;});});
+    const r2=t>0?Math.round(p/t*100):0;
+    const col=r2>=75?'var(--green)':r2>=50?'var(--gold)':'var(--red)';
+    return `<div style="display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid var(--border);">
+      <div style="font-size:1.3rem;width:28px;text-align:center;">${d.icon}</div>
+      <div style="flex:1;"><div style="font-weight:600;font-size:.87rem;margin-bottom:5px;">${d.name}</div>
+        <div style="background:rgba(255,255,255,.06);border-radius:20px;height:6px;overflow:hidden;">
+          <div style="width:${r2}%;height:100%;background:${col};border-radius:20px;transition:.5s;"></div>
+        </div>
+      </div>
+      <div style="color:${col};font-weight:700;font-size:.95rem;min-width:42px;text-align:right;">${r2}%</div>
+    </div>`;
+  }).join('');
+}
+
+/* ══ DEPARTMENTS ══ */
+function buildDeptGrid(){}
+function renderDeptGrid(){
+  document.getElementById('deptGrid').innerHTML=DEPARTMENTS.map(d=>`
+    <div class="dept-card">
+      <div class="dc-icon">${d.icon}</div>
+      <div class="dc-name">${d.name}</div>
+      <div class="dc-count">${STUDENTS.filter(s=>s.dept===d.id).length+(d.id==='cs'?CS8.filter(s=>!STUDENTS.find(x=>x.id===s.id)).length:0)} students</div>
+    </div>
+  `).join('');
+}
+
+/* ══ DOWNLOAD ══ */
+function downloadPDF(){
+  const lines=TODAY_ATT.map((r,i)=>`${i+1}. ${r.name} | ${r.id} | ${r.status} | ${r.time}`).join('\n');
+  const text=`EAST AFRICA UNIVERSITY – QARDHO\nAttendance Report – ${new Date().toDateString()}\n\n${lines||'No records yet.'}`;
+  const blob=new Blob([text],{type:'text/plain'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='EAU_Attendance.txt';a.click();
+}
+function downloadExcel(){
+  const header='#,Name,Student ID,Status,Time\n';
+  const rows=TODAY_ATT.map((r,i)=>`${i+1},"${r.name}",${r.id},${r.status},${r.time}`).join('\n');
+  const blob=new Blob([header+rows],{type:'text/csv'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='EAU_Attendance.csv';a.click();
+}
+function clearTodayRecords(){
+  if(!confirm('Clear all today\'s records?'))return;
+  TODAY_ATT=[];localStorage.setItem('eau2_today',JSON.stringify(TODAY_ATT));
+  renderRepStats();renderRepTable();
+}
+
+/* ══ STORAGE ══ */
+function saveStudents(){localStorage.setItem('eau2_students',JSON.stringify(STUDENTS));}
+function saveAtt(){localStorage.setItem('eau2_att',JSON.stringify(ATT));}
+
+/* ══ SEED DATA ══ */
+function seedSampleData(){
+  const today=new Date();
+  const courses=COURSES.cs[8];
+  for(let i=7;i>=0;i--){
+    const d=new Date(today);d.setDate(d.getDate()-i);
+    const date=d.toISOString().slice(0,10);
+    courses.forEach(c=>{
+      const key=`cs_8_${c.code}_${date}`;
+      if(!ATT[key]){
+        const rec={};
+        CS8.forEach(s=>{rec[s.id]=Math.random()<.85?'P':Math.random()<.5?'A':'L';});
+        ATT[key]=rec;
+      }
+    });
+  }
+  saveAtt();
+}
+</script>
+</body>
+</html>
